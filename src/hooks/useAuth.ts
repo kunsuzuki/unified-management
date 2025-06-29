@@ -6,7 +6,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@/services/supabase';
+import { createClient } from '@/services/supabase';
 import { useEffect, useState } from 'react';
 import { type User } from '@supabase/supabase-js';
 
@@ -14,7 +14,7 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-  const supabase = createSupabaseClient();
+  const supabase = createClient();
 
   // 認証状態の監視
   useEffect(() => {

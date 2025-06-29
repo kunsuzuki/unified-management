@@ -22,13 +22,13 @@ const optionalEnv = (key: string, defaultValue: string = ''): string => {
 // 環境変数の設定
 export const env = {
   // アプリケーション設定
-  NODE_ENV: optionalEnv('NODE_ENV', 'development'),
-  APP_URL: optionalEnv('APP_URL', 'http://localhost:3000'),
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  APP_URL: process.env.APP_URL || 'http://localhost:3000',
   
   // Supabase設定
   // 注意: NEXT_PUBLIC_から始まる環境変数はクライアントサイドでも利用可能
-  NEXT_PUBLIC_SUPABASE_URL: optionalEnv('NEXT_PUBLIC_SUPABASE_URL'),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   
   // サーバーサイドのみで使用するSupabase設定
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',

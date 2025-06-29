@@ -1,6 +1,6 @@
 'use client';
 
-import { NAV_ITEMS } from '@/constants';
+import { NAVIGATION_ITEMS } from '@/constants';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,19 +21,19 @@ export function Sidebar({ className }: { className?: string }) {
             メニュー
           </h2>
           <div className="space-y-1">
-            {NAV_ITEMS.map((item) => (
+            {NAVIGATION_ITEMS.map((item) => (
               <Link
-                key={item.href}
-                href={item.href}
+                key={item.path}
+                href={item.path}
                 className={cn(
                   'flex items-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
-                  pathname === item.href
+                  pathname === item.path
                     ? 'bg-accent text-accent-foreground'
                     : 'transparent'
                 )}
               >
-                {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                <span>{item.label}</span>
+                <span className="mr-2 h-4 w-4">{item.icon}</span>
+                <span>{item.name}</span>
               </Link>
             ))}
           </div>
