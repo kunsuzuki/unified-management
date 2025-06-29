@@ -3,67 +3,102 @@
  * 
  * サーバーコンポーネントとクライアントコンポーネントで使用するSupabaseクライアントを提供します。
  */
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { Database } from '../types/database';
+import { Database } from '@/types/database';
+import { env } from '@/config/env';
 
-// クライアントサイドでのSupabaseクライアント作成
-export const createSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+/**
+ * ブラウザ側で使用するSupabaseクライアントを作成
+ */
+export const createClient = () => {
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabaseの環境変数が設定されていません。');
   }
-  
-  return createClient<Database>(supabaseUrl, supabaseAnonKey);
+
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 };
 
-// サーバーサイドでのSupabaseクライアント作成（Cookieベース）
-export const createSupabaseServerClient = () => {
+/**
+ * サーバー側で使用するSupabaseクライアントを作成
+ */
+export const createServerSupabaseClient = () => {
   const cookieStore = cookies();
-  
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabaseの環境変数が設定されていません。');
   }
   
-  return createServerClient<Database>(
+  return createServerClient<Database>({
     supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          cookieStore.set({ name, value: '', ...options });
-        },
+    supabaseKey: supabaseAnonKey,
+    getCookie: name => {
+      return cookieStore.get(name)?.value;
+    },
+    setCookie: (name, value, options) => {
+      // cookieStoreはPromiseを返すため、void演算子でPromiseを無視
+      void cookieStore.set({ name, value, ...options });
+    },
+    deleteCookie: (name, options) => {
+      void cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+    }
+  });
+};
+
+/**
+ * 管理者権限を持つSupabaseクライアントを作成
+ * 
+ * 注意: このクライアントはサーバーサイドでのみ使用してください
+ */
+export const createAdminClient = () => {
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Supabaseの環境変数が設定されていません。');
+  }
+
+  return createServerClient<Database>({
+    supabaseUrl,
+    supabaseKey: supabaseServiceRoleKey,
+    options: {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
-  );
+  });
 };
 
-// サーバーサイドでの管理者権限を持つSupabaseクライアント作成
-// 注意: これはサーバーサイドでのみ使用し、RLSをバイパスする必要がある場合のみ使用してください
-export const createSupabaseAdminClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Supabase管理者用の環境変数が設定されていません。');
+/**
+ * サーバーアクションで使用するSupabaseクライアントを作成
+ */
+export const createActionClient = () => {
+  const cookieStore = cookies();
+  const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabaseの環境変数が設定されていません。');
   }
-  
-  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
+
+  return createServerClient<Database>({
+    supabaseUrl,
+    supabaseKey: supabaseAnonKey,
+    getCookie: name => {
+      return cookieStore.get(name)?.value;
     },
+    setCookie: (name, value, options) => {
+      void cookieStore.set({ name, value, ...options });
+    },
+    deleteCookie: (name, options) => {
+      void cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+    }
   });
 };
