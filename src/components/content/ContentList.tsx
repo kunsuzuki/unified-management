@@ -24,7 +24,7 @@ export interface ContentItem {
 /**
  * コンテンツリストのプロパティ
  */
-interface ContentListProps {
+export interface ContentListProps {
   items: ContentItem[];
   contentType: ContentType;
   emptyStateTitle: string;
@@ -32,6 +32,7 @@ interface ContentListProps {
   onCreateNew: () => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  isLoading?: boolean;
 }
 
 /**
@@ -47,6 +48,7 @@ export function ContentList({
   onCreateNew,
   onEdit,
   onDelete,
+  isLoading = false,
 }: ContentListProps) {
   // コンテンツタイプに応じたアイコンを取得
   const getEmptyStateIcon = () => {
@@ -61,6 +63,15 @@ export function ContentList({
         return <FileText className="h-10 w-10" />;
     }
   };
+
+  // ローディング中の表示
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // コンテンツがない場合は空の状態を表示
   if (items.length === 0) {
@@ -89,7 +100,7 @@ export function ContentList({
           updatedAt={item.updatedAt}
           tags={item.tags}
           onEdit={onEdit}
-          onDelete={onDelete}
+          onDelete={isLoading ? undefined : onDelete}
         />
       ))}
     </div>

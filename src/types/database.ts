@@ -176,6 +176,40 @@ export interface Database {
           }
         ]
       }
+      tag_mappings: {
+        Row: {
+          id: string
+          tag_id: string
+          content_type: number // 1: Document, 2: Task, 3: Memo
+          content_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tag_id: string
+          content_type: number // 1: Document, 2: Task, 3: Memo
+          content_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tag_id?: string
+          content_type?: number
+          content_id?: string
+          user_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_mappings_tag_id_fkey"
+            columns: ["tag_id"]
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       content_tags: {
         Row: {
           id: string
