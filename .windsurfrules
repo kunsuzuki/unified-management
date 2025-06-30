@@ -5,6 +5,24 @@ Next.jsの詳細なコーディングルールは、`docs/nextjs-rules.md`を参
 
 ## 1. 基本原則
 
+### 1.0 最新の公式ドキュメントを参照し、常に正確なベストプラクティスのコードを実装する
+1.Next.js関連:
+- 公式ドキュメント: https://nextjs.org/docs
+- App Routerガイド: https://nextjs.org/docs/app
+- Server Actionsの使い方: https://nextjs.org/docs/app/api-reference/functions/server-actions
+- データフェッチの最適化: https://nextjs.org/docs/app/building-your-application/data-fetching
+2.Supabase関連:
+- 公式ドキュメント: https://supabase.com/docs
+- 認証機能: https://supabase.com/docs/guides/auth
+- データベース操作: https://supabase.com/docs/guides/database
+- Row Level Security: https://supabase.com/docs/guides/auth/row-level-security
+- TypeScript連携: https://supabase.com/docs/guides/api/typescript-support
+3.UI/UX関連:
+- shadcn/uiコンポーネント: https://ui.shadcn.com/docs
+- Tailwind CSS: https://tailwindcss.com/docs
+
+
+
 ### 1.1 コード品質
 
 - **TypeScriptを必須**とし、型定義を厳格に行う
