@@ -10,22 +10,24 @@ import type { CookieOptions } from '@supabase/ssr';
 import type { Database } from '@/types/database';
 import { env } from '@/config/env';
 
-// 型エラーを回避するためのヘルパー関数
-const getCookieValue = (name: string) => {
+// Next.js 15ではcookies()は非同期APIとして扱う必要がある
+
+// サーバーサイドのcookies操作用ヘルパー関数
+const getCookieValue = async (name: string) => {
+  // Next.js 15ではcookies()を非同期で扱う必要がある
   const cookieStore = cookies();
-  // 型アサーションで型エラーを回避
-  // @ts-ignore - cookies()の型定義が変更されている可能性があるため
-  return cookieStore.get(name)?.value;
+  const cookie = cookieStore.get(name);
+  return cookie?.value;
 };
 
-const setCookieValue = (name: string, value: string, options?: CookieOptions) => {
-  // @ts-ignore - cookies()の型定義が変更されている可能性があるため
-  cookies().set(name, value, options);
+const setCookieValue = async (name: string, value: string, options?: CookieOptions) => {
+  const cookieStore = cookies();
+  cookieStore.set(name, value, options);
 };
 
-const removeCookieValue = (name: string, options?: { path?: string; domain?: string }) => {
-  // @ts-ignore - cookies()の型定義が変更されている可能性があるため
-  cookies().set(name, '', { ...options, maxAge: 0 });
+const removeCookieValue = async (name: string, options?: { path?: string; domain?: string }) => {
+  const cookieStore = cookies();
+  cookieStore.set(name, '', { ...options, maxAge: 0 });
 };
 
 /**
@@ -44,14 +46,14 @@ export const createServerSupabaseClient = () => {
     supabaseAnonKey,
     {
       cookies: {
-        get: (name: string) => {
-          return getCookieValue(name);
+        get: async (name: string) => {
+          return await getCookieValue(name);
         },
-        set: (name: string, value: string, options: CookieOptions) => {
-          setCookieValue(name, value, options);
+        set: async (name: string, value: string, options: CookieOptions) => {
+          await setCookieValue(name, value, options);
         },
-        remove: (name: string, options: { path?: string; domain?: string; }) => {
-          removeCookieValue(name, options);
+        remove: async (name: string, options: CookieOptions) => {
+          await removeCookieValue(name, options);
         },
       },
     }

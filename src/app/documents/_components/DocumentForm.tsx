@@ -43,29 +43,51 @@ export function DocumentForm({ userId, document }: DocumentFormProps) {
       const fetchDocumentTags = async () => {
         try {
           const supabase = createClient();
-          // タグマッピングテーブルからドキュメントに関連するタグを取得
-          // @ts-ignore - Supabaseの型定義の問題を一時的に無視
-          const { data, error } = await supabase
-            .from('tag_mappings')
-            .select(`
-              tag_id,
-              tags:tag_id(id, name, color)
-            `)
-            .eq('content_id', document.id)
-            .eq('content_type', 1) // 1: Document
-            
-          if (error) throw error;
           
-          if (data && data.length > 0) {
+          // デバッグ用：ドキュメントIDを確認
+          console.log('ドキュメントID:', document.id);
+          
+          // タグマッピングテーブルからドキュメントに関連するタグを取得
+          const { data: mappings, error: mappingsError } = await supabase
+            .from('tag_mappings')
+            .select('tag_id, content_type')
+            .eq('content_id', document.id)
+            .eq('content_type', 1); // 整数型で1を指定（ドキュメントタイプ）
+            
+          if (mappingsError) {
+            console.error('タグマッピング取得エラー:', mappingsError);
+            return;
+          }
+          
+          console.log('取得したタグマッピング:', mappings);
+          
+          if (mappings && mappings.length > 0) {
+            // タグIDのリストを取得
+            const tagIds = mappings.map(mapping => mapping.tag_id);
+            
+            // タグ情報を取得
+            const { data: tagData, error: tagError } = await supabase
+              .from('tags')
+              .select('id, name, color')
+              .in('id', tagIds);
+              
+            if (tagError) {
+              console.error('タグ情報取得エラー:', tagError);
+              return;
+            }
+            
+            console.log('取得したタグ情報:', tagData);
+            
             // タグデータを整形
-            // @ts-ignore - Supabaseの型定義の問題を一時的に無視
-            const tags = data.map(item => ({
-              id: item.tags.id,
-              name: item.tags.name,
-              color: item.tags.color || ''
+            const tags = tagData.map(tag => ({
+              id: tag.id,
+              name: tag.name,
+              color: tag.color || ''
             }));
             
             setSelectedTags(tags);
+          } else {
+            console.log('このドキュメントに関連付けられたタグはありません');
           }
         } catch (err) {
           console.error('タグ取得エラー:', err);
@@ -131,25 +153,41 @@ export function DocumentForm({ userId, document }: DocumentFormProps) {
             .from('tag_mappings')
             .delete()
             .eq('content_id', documentId)
-            .eq('content_type', 1) // 1: Document
+            .eq('content_type', 1) // 整数型で1を指定（ドキュメントタイプ）
         }
         
         // 新しいタグ関連付けを作成
         if (selectedTags.length > 0) {
+          console.log('選択されたタグ:', selectedTags);
+          
           // 新しいタグマッピングを作成
           for (const tag of selectedTags) {
-            // @ts-ignore - Supabaseの型定義の問題を一時的に無視
-            const { error: tagError } = await supabase
+            console.log('タグ関連付け処理:', tag.id, tag.name);
+            
+            // タグマッピングデータを明示的に定義
+            const tagMapping = {
+              content_id: documentId,
+              tag_id: tag.id,
+              content_type: 1 // 整数型でドキュメントタイプを表す値を1として指定
+              // user_idカラムはtag_mappingsテーブルに存在しないため削除
+            };
+            
+            console.log('挿入するタグマッピングデータ:', tagMapping);
+            
+            // タグ関連付けの処理を改善
+            const { data: insertedData, error: tagError } = await supabase
               .from('tag_mappings')
-              .insert({
-                content_id: documentId,
-                tag_id: tag.id,
-                content_type: 1, // 1: Document
-                user_id: userId
-              });
+              .insert(tagMapping)
+              .select();
               
             if (tagError) {
               console.error('タグ関連付けエラー:', tagError);
+              // エラーの詳細情報を出力
+              console.error('エラー詳細:', JSON.stringify(tagError, null, 2));
+              // エラーをスローするのではなく、エラー情報を記録して処理を継続
+              setError(`タグ「${tag.name}」の関連付けに失敗しました。他のタグは正常に処理されています。`);
+            } else {
+              console.log('タグ関連付け成功:', insertedData);
             }
           }
         }
