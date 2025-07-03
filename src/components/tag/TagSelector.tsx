@@ -108,37 +108,53 @@ export function TagSelector({ selectedTags, onTagsChange, userId }: TagSelectorP
   
   // タグを選択
   const toggleTag = (tag: Tag) => {
+    console.log('タグ選択処理:', tag);
+    console.log('現在の選択タグ:', selectedTags);
+    
     const isSelected = selectedTags.some(t => t.id === tag.id);
+    console.log('選択済みか？', isSelected);
     
     if (isSelected) {
       // 選択解除
-      onTagsChange(selectedTags.filter(t => t.id !== tag.id));
+      const newTags = selectedTags.filter(t => t.id !== tag.id);
+      console.log('選択解除後:', newTags);
+      onTagsChange(newTags);
     } else {
       // 選択
-      onTagsChange([...selectedTags, tag]);
+      const newTags = [...selectedTags, tag];
+      console.log('選択追加後:', newTags);
+      onTagsChange(newTags);
     }
   };
   
   // タグを削除
   const removeTag = (tagId: string) => {
-    onTagsChange(selectedTags.filter(tag => tag.id !== tagId));
+    console.log('タグ削除:', tagId);
+    console.log('削除前のタグ:', selectedTags);
+    const updatedTags = selectedTags.filter(tag => tag.id !== tagId);
+    console.log('削除後のタグ:', updatedTags);
+    onTagsChange(updatedTags);
   };
   
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2 mb-2">
         {selectedTags.map(tag => (
-          <Badge
-            key={tag.id}
-            variant="outline"
-            className={`bg-${tag.color ? tag.color : 'gray'}-100 text-${tag.color ? tag.color : 'gray'}-800 flex items-center gap-1`}
-          >
-            {tag.name}
-            <X
-              className="h-3 w-3 cursor-pointer"
+          <div key={tag.id} className="flex items-center gap-1">
+            <Badge
+              variant="outline"
+              className={`${tag.color ? `bg-${tag.color}-100 text-${tag.color}-800` : 'bg-gray-100 text-gray-800'}`}
+            >
+              {tag.name}
+            </Badge>
+            <button 
+              type="button"
+              className="h-5 w-5 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
               onClick={() => removeTag(tag.id)}
-            />
-          </Badge>
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
         ))}
       </div>
       
@@ -163,10 +179,11 @@ export function TagSelector({ selectedTags, onTagsChange, userId }: TagSelectorP
                 <CommandEmpty>タグが見つかりません</CommandEmpty>
                 <CommandGroup>
                   {tags.map(tag => (
-                    <CommandItem
+                    <div 
                       key={tag.id}
-                      value={tag.name}
-                      onSelect={() => {
+                      className="cursor-pointer px-2 py-1.5 hover:bg-accent rounded-sm flex items-center"
+                      onClick={() => {
+                        console.log('タグクリックイベント:', tag.name);
                         toggleTag(tag);
                         setOpen(false);
                       }}
@@ -179,18 +196,25 @@ export function TagSelector({ selectedTags, onTagsChange, userId }: TagSelectorP
                             : "opacity-0"
                         )}
                       />
-                      <span className={`flex-1 text-${tag.color ? tag.color : 'gray'}-800`}>{tag.name}</span>
-                    </CommandItem>
+                      <span className="flex-1">
+                        <span 
+                          className={`px-2 py-1 rounded-md text-sm ${tag.color ? `bg-${tag.color}-100 text-${tag.color}-800` : 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {tag.name}
+                        </span>
+                      </span>
+                    </div>
                   ))}
-                  <CommandItem
-                    onSelect={() => {
+                  <div 
+                    className="cursor-pointer px-2 py-1.5 hover:bg-accent rounded-sm flex items-center"
+                    onClick={() => {
                       setNewTagName('');
                       document.getElementById('new-tag-input')?.focus();
                     }}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     <span className="flex-1">新しいタグを作成</span>
-                  </CommandItem>
+                  </div>
                 </CommandGroup>
               </CommandList>
               <div className="flex items-center border-t p-2">
